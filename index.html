@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GreenThumb</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-green-50 font-sans">
+  <div class="max-w-sm mx-auto shadow-xl rounded-xl overflow-hidden mt-6 bg-white">
+    <!-- Header -->
+    <div class="bg-green-600 text-white text-center py-4 text-xl font-bold">🌿 GreenThumb</div>
+
+    <!-- Navigation -->
+    <div class="flex justify-around bg-green-100 text-green-800 text-sm py-2">
+      <button onclick="showPage('home')" class="font-semibold">Home</button>
+      <button onclick="showPage('analysis')" class="font-semibold">Analysis</button>
+      <button onclick="showPage('profile')" class="font-semibold">Profile</button>
+    </div>
+
+    <!-- Home Page -->
+    <div id="home" class="p-4">
+      <h2 class="text-lg font-semibold mb-2">Monitored Plants</h2>
+
+      <!-- Plant Dropdown -->
+      <div class="bg-green-100 p-3 rounded-lg shadow-sm">
+        <label for="plant-name" class="font-semibold">Select Plant</label>
+        <select id="plant-name" class="w-full p-2 rounded-md mt-2" onchange="updatePlantDetails(this)">
+          <option value="aloevera">Aloe Vera</option>
+          <option value="money-plant">Money Plant</option>
+          <option value="hibiscus">Hibiscus</option>
+          <option value="cactus">Cactus</option>
+        </select>
+      </div>
+
+      <!-- Plant Parameters -->
+      <div id="plant-details" class="space-y-3 mt-4">
+        <div class="bg-green-100 p-3 rounded-lg shadow-sm"><div id="moisture" class="font-semibold">Soil Moisture: 40%–60%</div></div>
+        <div class="bg-green-100 p-3 rounded-lg shadow-sm"><div id="light" class="font-semibold">Light Intensity: 200–400 Lux</div></div>
+        <div class="bg-green-100 p-3 rounded-lg shadow-sm"><div id="temperature" class="font-semibold">Temperature: 20–30°C</div></div>
+        <div class="bg-green-100 p-3 rounded-lg shadow-sm"><div id="humidity" class="font-semibold">Humidity: 50%–70%</div></div>
+      </div>
+
+      <!-- About Project -->
+      <div class="bg-green-100 p-3 mt-6 rounded-lg shadow-sm">
+        <h3 class="font-semibold">About this Project:</h3>
+        <p class="text-sm text-gray-600">
+          GreenThumb is a personalized plant care assistant that helps you monitor and maintain optimal conditions for your plants. It uses sensor data and intelligent recommendations to ensure your plants thrive.
+        </p>
+      </div>
+    </div>
+
+    <!-- Analysis Page -->
+    <div id="analysis" class="p-4 hidden">
+      <h2 class="text-lg font-semibold mb-2">Plant Condition Analysis</h2>
+  
+      <!-- Removed the Plant Selection Dropdown -->
+      <div class="mt-4">
+        <input type="number" id="moisture-input" placeholder="Soil Moisture" class="input-style" />
+        <input type="number" id="light-input" placeholder="Light Intensity" class="input-style" />
+        <input type="number" id="temperature-input" placeholder="Temperature" class="input-style" />
+        <input type="number" id="humidity-input" placeholder="Humidity" class="input-style" />
+        <input type="text" id="plant-input" placeholder="Plant Name" class="input-style" />
+        <button onclick="fetchSensorData()" class="btn-green mt-2">📡 Fetch from ESP32</button>
+        <button onclick="predict()" class="btn-green mt-2">🔍 Predict</button>
+        <button onclick="waterPlant()" class="btn-green mt-2">💧 Water Plant</button>
+        <div id="result" class="mt-3 font-semibold text-center"></div>
+      </div>
+    </div>
+
+    <!-- Profile Page -->
+    <div id="profile" class="p-4 hidden text-center">
+      <h2 class="text-lg font-semibold mb-2">👤 Profile</h2>
+      <p class="text-sm text-gray-600">Welcome to GreenThumb, your personalized plant care assistant.</p>
+      <div class="mt-4">
+        <label for="email" class="block text-sm font-semibold">Email Address</label>
+        <input type="email" id="email" placeholder="Enter email" class="input-style" />
+      </div>
+      <div class="mt-4">
+        <label for="username" class="block text-sm font-semibold">Username</label>
+        <input type="text" id="username" placeholder="Enter username" class="input-style" />
+      </div>
+      <div class="mt-4">
+        <label for="password" class="block text-sm font-semibold">Password</label>
+        <input type="password" id="password" placeholder="Enter password" class="input-style" />
+      </div>
+      <button onclick="login()" class="btn-green mt-4">Sign Up</button>
+    </div>
+
+    <!-- After Login Page -->
+    <div id="user-info" class="p-4 hidden">
+      <h2 class="text-lg font-semibold mb-2">👤 Welcome, User!</h2>
+      <div class="bg-green-100 p-3 rounded-lg shadow-sm">
+        <p><strong>Username:</strong> <span id="display-username">****</span></p>
+        <p><strong>Email:</strong> <span id="display-email">****</span></p>
+        <p><strong>Password:</strong> <span id="display-password">****</span></p>
+      </div>
+      <button onclick="logout()" class="btn-green mt-4">Logout</button>
+    </div>
+  </div>
+
+  <!-- Styles -->
+  <style>
+    .input-style {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    .btn-green {
+      width: 100%;
+      padding: 10px;
+      background-color: #16a34a;
+      color: white;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+  </style>
+
+  <!-- Script -->
+  <script>
+    function showPage(page) {
+      ['home', 'analysis', 'profile', 'user-info'].forEach(p => {
+        document.getElementById(p).classList.add('hidden');
+      });
+      document.getElementById(page).classList.remove('hidden');
+    }
+
+    function updatePlantDetails(select) {
+      const plant = select.value;
+      let moisture, light, temp, humidity;
+      switch (plant) {
+        case 'aloevera': moisture = '40%–60%'; light = '200–400 Lux'; temp = '20–30°C'; humidity = '50%–70%'; break;
+        case 'money-plant': moisture = '35%–55%'; light = '400–600 Lux'; temp = '18–26°C'; humidity = '60%–75%'; break;
+        case 'hibiscus': moisture = '50%–70%'; light = '900–1100 Lux'; temp = '24–30°C'; humidity = '50%–60%'; break;
+        case 'cactus': moisture = '20%–40%'; light = '1400–1600 Lux'; temp = '25–35°C'; humidity = '30%–50%'; break;
+        default: moisture = light = temp = humidity = '';
+      }
+      document.getElementById("moisture").innerText = `Soil Moisture: ${moisture}`;
+      document.getElementById("light").innerText = `Light Intensity: ${light}`;
+      document.getElementById("temperature").innerText = `Temperature: ${temp}`;
+      document.getElementById("humidity").innerText = `Humidity: ${humidity}`;
+    }
+
+    async function predict() {
+      const data = {
+        soil_moisture: parseFloat(document.getElementById("moisture-input").value),
+        light_intensity: parseFloat(document.getElementById("light-input").value),
+        temperature: parseFloat(document.getElementById("temperature-input").value),
+        humidity: parseFloat(document.getElementById("humidity-input").value),
+        plant_name: document.getElementById("plant-input").value.trim()
+      };
+
+      const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        document.getElementById("result").innerText = "❌ Error in prediction.";
+        return;
+      }
+
+      const result = await response.json();
+      document.getElementById("result").innerText =
+        `🌿 Condition: ${result.predicted_condition}\n📝 ${result.recommendation}`;
+
+        // Add the code for the fetch request to the backend that you provided
+  fetch("http://127.0.0.1:8000/predict", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      soil_moisture: 300,
+      light_intensity: 600,
+      temperature: 24.5,
+      humidity: 60,
+      plant_name: "Aloe Vera"
+    }),
+  })
+  .then(res => res.json())
+  .then(data => console.log(data))
+  .catch(err => console.error(err));
+    }
+
+    async function fetchSensorData() {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/sensor-data");
+        const data = await response.json();
+        document.getElementById("moisture-input").value = data.soil_moisture;
+        document.getElementById("light-input").value = data.light_intensity;
+        document.getElementById("temperature-input").value = data.temperature;
+        document.getElementById("humidity-input").value = data.humidity;
+      } catch (err) {
+        alert("⚠️ Could not fetch data from ESP32");
+        console.error(err);
+      }
+    }
+
+    async function waterPlant() {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/water-on", {
+      method: "GET"
+    });
+    if (response.ok) {
+      alert("💧 Water pump turned ON successfully!");
+    } else {
+      alert("❌ Failed to trigger watering.");
+    }
+  } catch (err) {
+    alert("⚠️ Error connecting to ESP32 for watering.");
+    console.error(err);
+  }
+}
+
+async function stopWatering() {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/water-off", {
+      method: "GET"
+    });
+    if (response.ok) {
+      alert("💧 Water pump turned OFF successfully!");
+    } else {
+      alert("❌ Failed to stop watering.");
+    }
+  } catch (err) {
+    alert("⚠️ Error connecting to ESP32 for stopping watering.");
+    console.error(err);
+  }
+}
+
+
+    function login() {
+      const username = document.getElementById("username").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      document.getElementById("profile").classList.add("hidden");
+      document.getElementById("user-info").classList.remove("hidden");
+      document.getElementById("display-username").innerText = username;
+      document.getElementById("display-email").innerText = email;
+      document.getElementById("display-password").innerText = "*".repeat(password.length);
+    }
+
+    function logout() {
+      document.getElementById("user-info").classList.add("hidden");
+      document.getElementById("profile").classList.remove("hidden");
+    }
+  </script>
+</body>
+</html>
